@@ -89,7 +89,7 @@ Assignment 1/
 
 ```bash
 cd "Assignment 1"
-python -m spellchecker.main
+python app.py
 ```
 
 ### Options
