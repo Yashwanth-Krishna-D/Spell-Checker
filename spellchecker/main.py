@@ -165,7 +165,7 @@ def get_input(top_n: int, verbose: bool) -> None:
             break
 
         result = spell_check(word, top_n=top_n, verbose=verbose)
-        show(result, verbose=verbose)
+        # show(result, verbose=verbose)
 
 
 def main():
@@ -173,7 +173,7 @@ def main():
     args = parser.parse_args()
     if args.word:
         result = spell_check(args.word, top_n=args.top, verbose=args.verbose)
-        show(result, verbose=args.verbose)
+        # show(result, verbose=args.verbose)
     else:
         get_input(top_n=args.top, verbose=args.verbose)
 
