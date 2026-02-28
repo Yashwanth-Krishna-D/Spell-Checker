@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpellCheck Terminal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --green: #39ff14;
+            --green-dim: #1db800;
+            --green-glow: rgba(57, 255, 20, 0.18);
+            --amber: #ffb700;
+            --red: #ff4444;
+            --blue: #4fc3f7;
+            --bg: #0a0f0a;
+            --bg-panel: #0d130d;
+            --border: rgba(57, 255, 20, 0.25);
+            --font: 'JetBrains Mono', 'Courier New', monospace;
+        }
+
+        html,
+        body {
+            height: 100%;
+            background: var(--bg);
+            color: var(--green);
+            font-family: var(--font);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+            background: repeating-linear-gradient(to bottom,
+                    transparent 0px,
+                    transparent 3px,
+                    rgba(0, 0, 0, 0.06) 3px,
+                    rgba(0, 0, 0, 0.06) 4px);
+        }
+
+        .wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 32px 16px 64px;
+        }
+
+        .terminal-window {
+            width: 100%;
+            max-width: 820px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 0 40px var(--green-glow), 0 0 80px rgba(57, 255, 20, 0.06);
+            overflow: hidden;
+        }
+
+        .title-bar {
+            background: #111811;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-r {
+            background: #ff5f57;
+        }
+
+        .title-label {
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            color: #4a6a4a;
+            letter-spacing: 2px;
+        }
+
+        .terminal-body {
+            background: var(--bg-panel);
+            padding: 24px 28px 28px;
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .banner {
+            color: var(--green-dim);
+            font-size: 11px;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 14px;
+            margin-bottom: 20px;
+            white-space: pre;
+        }
+
+        .banner span {
+            color: var(--green);
+            font-weight: bold;
+        }
+
+        #output {
+            flex: 1;
+            min-height: 200px;
+            max-height: 460px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            scroll-behavior: smooth;
+        }
+
+        #output::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #output::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #output::-webkit-scrollbar-thumb {
+            background: var(--green-dim);
+            border-radius: 4px;
+        }
+
+        .line {
+            padding: 1px 0;
+            animation: fadein 0.15s ease;
+        }
+
+        @keyframes fadein {
+            from {
+                opacity: 0;
+                transform: translateY(3px);
+            }
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .line-prompt { color: var(--green-dim); }
+        .line-info { color: var(--green); }
+        .line-header { color: var(--amber); font-weight: bold; }
+        .line-sep { color: #1e3a1e; }
+        .line-cand { color: #a8d5a8; }
+        .line-best { color: var(--green); font-weight: bold; }
+        .line-error { color: var(--red); }
+        .line-system { color: #3a5a3a; font-style: italic; }
+        .line-realword { color: var(--blue); }
+        .line-dist0 { color: var(--amber); }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+        }
+
+        .ps1 {
+            color: var(--green-dim);
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        #wordInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--green);
+            font-family: var(--font);
+            font-size: 14px;
+            caret-color: var(--green);
+        }
+
+        #wordInput::placeholder { color: #2a4a2a; }
+
+        #submitBtn, #clearBtn {
+            background: transparent;
+            border: 1px solid var(--green-dim);
+            color: var(--green);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 4px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+        }
+
+        #submitBtn:hover, #clearBtn:hover {
+            background: var(--green-glow);
+            border-color: var(--green);
+            box-shadow: 0 0 10px var(--green-glow);
+        }
+
+        #submitBtn:active, #clearBtn:active { transform: scale(0.97); }
+        #submitBtn:disabled, #clearBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: var(--green);
+            vertical-align: middle;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        @media (max-width: 540px) {
+            .terminal-body { padding: 16px 14px 18px; }
+            .banner { font-size: 9px; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <h1 class="input"> HELLO, WELCOME TO SPELLCHECKER APPLICATION </h1>
+        <br>
+        <div class="terminal-window">
+
+            <div class="title-bar">
+                <div class="dot dot-r"></div>
+                <div class="title-label">SPELLCHECK ── MIN EDIT DISTANCE ── v1.0</div>
+            </div>
+
+            <div class="terminal-body">
+                <pre class="banner">┌─────────────────────────────────────────────────────────────────┐
+│  Algorithm : Levenshtein Distance  │  Corpus : COCA (10k words) │
+│  Ranking   : argmax P(x|w) × P(w)  │  Max edit dist : 2         │
+└─────────────────────────────────────────────────────────────────┘</pre>
+
+                <div id="output">
+                    <div class="line line-system">Type a word below and press [ENTER] or click [CHECK].</div>
+                    <div class="line line-system">────────────────────────────────────────────────────────</div>
+                    <br />
+                </div>
+
+                <div class="input-row">
+                    <span class="ps1">spellcheck&nbsp;~$&nbsp;</span>
+                    <input id="wordInput" type="text" autocomplete="off" spellcheck="false" placeholder="enter word..." maxlength="60" />
+                    <button id="submitBtn">[ CHECK ]</button>
+                    <button id="clearBtn"> [ CLEAR ]</button>
+                </div>
+
+            </div>
+        </div>
+        <center>
+            <p class="input" style="margin-top: 2vh;"> Made with &hearts; by Yashwanth Krishna D</p>
+        </center>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+        const input = document.getElementById('wordInput');
+        const btn = document.getElementById('submitBtn');
+        const clear = document.getElementById('clearBtn');
+
+        input.focus();
+
+        function addLine(text, cls = 'line-info') {
+            const d = document.createElement('div');
+            d.className = 'line ' + cls;
+            d.textContent = text;
+            output.appendChild(d);
+            output.scrollTop = output.scrollHeight;
+            return d;
+        }
+
+        function addRaw(html, cls = 'line-info') {
+            const d = document.createElement('div');
+            d.className = 'line ' + cls;
+            d.innerHTML = html;
+            output.appendChild(d);
+            output.scrollTop = output.scrollHeight;
+            return d;
+        }
+
+        function addBlank() { addLine(''); }
+
+        function renderTable(headers, rows) {
+            const colWidths = headers.map((h, i) =>
+                Math.max(h.length, ...rows.map(r => String(r[i]).length))
+            );
+
+            const sep = '  +' + colWidths.map(w => '-'.repeat(w + 2)).join('+') + '+';
+            addLine(sep, 'line-sep');
+
+            const headerRow =
+                '  |' +
+                headers.map((h, i) => ' ' + h.padEnd(colWidths[i]) + ' ').join('|') +
+                '|';
+
+            addLine(headerRow, 'line-system');
+            addLine(sep, 'line-sep');
+
+            rows.forEach(r => {
+                const row =
+                    '  |' +
+                    r.map((cell, i) => ' ' + String(cell).padEnd(colWidths[i]) + ' ').join('|') +
+                    '|';
+                addLine(row, 'line-cand');
+            });
+
+            addLine(sep, 'line-sep');
+        }
+
+        function renderResult(data) {
+            const word = data.input;
+            const isReal = data.is_real_word;
+            const cands = data.candidates || [];
+            const best = data.best;
+
+            addLine('Candidates:', 'line-header');
+
+            const rows = cands.map((c, i) => [
+                i + 1,
+                c.word,
+                c.edit_dist,
+                c.channel_prob.toFixed(6),
+                c.lang_prob.toFixed(8),
+                c.score.toExponential(4)
+            ]);
+
+            renderTable(['#', 'Word', 'Dist', 'P(x|w)', 'P(w)', 'Score'], rows);
+
+            addBlank();
+            addLine('════════════════════════════════════════════════════', 'line-sep');
+            addLine('  Input  : ' + word, 'line-header');
+            addLine('  Type   : ' + (isReal
+                ? 'real-word  (misspelled word is also present in vocabulary)'
+                : 'non-word   (not in vocabulary)'),
+                isReal ? 'line-realword' : 'line-info');
+            addLine('════════════════════════════════════════════════════', 'line-sep');
+            addBlank();
+
+            if (!cands.length) {
+                addLine('  [!] No candidates found within edit distance 2.', 'line-error');
+                addLine('      The word may be too unusual or heavily misspelled.', 'line-error');
+                addBlank();
+                return;
+            }
+
+            addBlank();
+            addLine('  Best correction:  >>  ' + best, 'line-best');
+            addBlank();
+        }
+
+        function renderError(msg) {
+            addBlank();
+            addLine('  [ERROR] ' + msg, 'line-error');
+            addBlank();
+        }
+
+        function showLoading(word) {
+            addLine('spellcheck ~$ ' + word, 'line-prompt');
+            const el = addRaw('  Computing candidates&nbsp;<span class="cursor"></span>', 'line-system');
+            return el;
+        }
+
+        function resetTerminal() {
+            const lines = [...output.children].reverse();
+            lines.forEach((line, i) => {
+                setTimeout(() => line.remove(), i * 15);
+            });
+
+            setTimeout(() => {
+                addLine('Type a word below and press [ENTER] or click [CHECK].', 'line-system');
+                addLine('────────────────────────────────────────────────────────', 'line-system');
+                addBlank();
+                input.value = '';
+                input.focus();
+            }, lines.length * 15 + 50);
+        }
+
+        async function runCheck() {
+            const word = input.value.trim();
+            if (!word) return;
+
+            btn.disabled = true;
+            input.disabled = true;
+
+            const loader = showLoading(word);
+
+            try {
+                const resp = await fetch('/check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word, top: 10, verbose: true })
+                });
+
+                loader.remove();
+
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    renderError(err.error || `HTTP ${resp.status}`);
+                } else {
+                    const data = await resp.json();
+                    renderResult(data);
+                }
+            } catch (e) {
+                loader.remove();
+                renderError('Network error — ' + e.message);
+            } finally {
+                btn.disabled = false;
+                input.disabled = false;
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        btn.addEventListener('click', runCheck);
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter') runCheck();
+        });
+
+        clear.addEventListener('click', resetTerminal);
+    </script>
+</body>
+</html>

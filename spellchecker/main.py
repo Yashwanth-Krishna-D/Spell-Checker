@@ -22,8 +22,8 @@ def init_models():
     from .candidate_generator import CandidateGenerator
     from .channel_model import ChannelModel
     
-    print(f"\n...[Entered CLI Mode]...")
-    print("\t>>Loading corpus ...", end="", flush=True)
+    # print(f"\n...[Entered CLI Mode]...")
+    # print("\t>>Loading corpus ...", end="", flush=True)
     t0 = time.time()
 
     lang_model = LanguageModel(corpus_path)
@@ -31,8 +31,8 @@ def init_models():
     chan_model = ChannelModel()
 
     elapsed = time.time() - t0
-    print(f"\r\t>>[OK] Corpus loaded: {lang_model.vocab_size:,} words "
-          f"({elapsed:.2f}s)          ")
+    # print(f"\r\t>>[OK] Corpus loaded: {lang_model.vocab_size:,} words "
+    #       f"({elapsed:.2f}s)          ")
 
 def spell_check(word: str, top_n: int = 10, verbose: bool = False) -> dict:
     init_models()
@@ -75,42 +75,42 @@ def spell_check(word: str, top_n: int = 10, verbose: bool = False) -> dict:
         "best": best
     }
 
-def show(result: dict, verbose: bool = False) -> None:
-    word = result["input"]
-    is_rw = result["is_real_word"]
-    candidates = result["candidates"]
-    best = result["best"]
+# def show(result: dict, verbose: bool = False) -> None:
+#     word = result["input"]
+#     is_rw = result["is_real_word"]
+#     candidates = result["candidates"]
+#     best = result["best"]
 
-    print()
-    print("\t>> " + "=" * 52)
-    print(f"\t>>    Input  : {word}")
-    word_type = "real-word (valid but possibly wrong)" if is_rw else "non-word (not in vocabulary)"
-    print(f"\t>>    Type   : {word_type}")
-    print("\t>> " + "=" * 52)
+#     print()
+#     print("\t>> " + "=" * 52)
+#     print(f"\t>>    Input  : {word}")
+#     word_type = "real-word (valid but possibly wrong)" if is_rw else "non-word (not in vocabulary)"
+#     print(f"\t>>    Type   : {word_type}")
+#     print("\t>> " + "=" * 52)
 
-    if not candidates:
-        print("\n  [!] No candidates found within edit distance 2.")
-        print("  Try checking the spelling more carefully.\n")
-        return
+#     if not candidates:
+#         print("\n  [!] No candidates found within edit distance 2.")
+#         print("  Try checking the spelling more carefully.\n")
+#         return
     
-    print("\n\t>>   Candidates:")
-    print(f"\t>>  {' #':<4} {'Word':<20} {'EditDist':<10}", end="")
-    if verbose:
-        print(f"\t\t{'P(x|w)':<12} {'P(w)':<14} {'Score':<16}", end="")
-    print()
-    print("\t" + "-" * (38 + (42 if verbose else 0)))
+#     print("\n\t>>   Candidates:")
+#     print(f"\t>>  {' #':<4} {'Word':<20} {'EditDist':<10}", end="")
+#     if verbose:
+#         print(f"\t\t{'P(x|w)':<12} {'P(w)':<14} {'Score':<16}", end="")
+#     print()
+#     print("\t" + "-" * (38 + (42 if verbose else 0)))
 
-    for rank, cand in enumerate(candidates, start=1):
-        line = f"  {rank:<4} {cand['word']:<20} {cand['edit_dist']:<10}"
-        if verbose:
-            line += (f" {cand['channel_prob']:<12.6f}"
-                     f" {cand['lang_prob']:<14.8f}"
-                     f" {cand['score']:<16.10f}")
-        print(f'\t>> {line}')
+#     for rank, cand in enumerate(candidates, start=1):
+#         line = f"  {rank:<4} {cand['word']:<20} {cand['edit_dist']:<10}"
+#         if verbose:
+#             line += (f" {cand['channel_prob']:<12.6f}"
+#                      f" {cand['lang_prob']:<14.8f}"
+#                      f" {cand['score']:<16.10f}")
+#         print(f'\t>> {line}')
 
-    print()
-    print(f"\t>>Best correction: {best}")
-    print()
+#     print()
+#     print(f"\t>>Best correction: {best}")
+#     print()
 
 def operations() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
