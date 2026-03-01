@@ -71,15 +71,22 @@ P(x | w) = 1 / (edit_distance(x, w) + 1)
 ```
 Assignment 1/
 ├── spellchecker/
-│   ├── __init__.py              # Package marker
-│   ├── edit_distance.py         # Levenshtein Distance 
-│   ├── candidate_generator.py   # Vocabulary scan + edit-distance filter
-│   ├── language_model.py        # Unigram P(w) with Laplace smoothing
-│   ├── channel_model.py         # P(x|w) via inverse edit distance
-│   ├── main.py                  # CLI entry point + noisy channel pipeline
+│   ├── __init__.py              
+│   ├── edit_distance.py         
+│   ├── candidate_generator.py   
+│   ├── language_model.py        
+│   ├── channel_model.py         
+│   ├── main.py                  
 │   └── corpus/
-│       └── word_frequencies.txt # 10,000 COCA-derived word frequencies
+│       └── word_frequencies.txt 
 └── README.md
+|__ .gitignore
+|__ requirements.txt
+|__ templates/
+    |__ index.html
+|__ app.py
+|__ procfile
+|__ runtime.txt
 ```
 
 ---
@@ -90,11 +97,4 @@ Assignment 1/
 ```bash
 cd "Assignment 1"
 python app.py
-```
-
-### Options
-```
---word  / -w    Word to check
---top   / -t    Number of top candidates to show (default: 10)
---verbose / -v  Show detailed scoring columns: P(x|w), P(w), score
 ```
